@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "390516140677",
+    "project_id": "cena-taxi",
+    "storage_bucket": "cena-taxi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:390516140677:android:ad7656ea68a6515ff857ec",
+        "android_client_info": {
+          "package_name": "com.example.cena_taxi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdnLCHCvbCv2dQAxqhDAg2JW47m5Hr1xA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
