@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Para TextInputFormatter
+import 'package:flutter/services.dart';
+import 'driver_dashboard_screen.dart';
 
 class VehicleSelectionScreen extends StatefulWidget {
   final String driverName;
@@ -14,12 +15,12 @@ class VehicleSelectionScreen extends StatefulWidget {
 class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   final TextEditingController _kmController = TextEditingController();
   String? _selectedVehicle;
-  List<String> _vehicleOptions = []; // Lista de opções combinadas (marca + modelo)
+  List<String> _vehicleOptions = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchVehicles(); // Carregar veículos ao iniciar a tela
+    _fetchVehicles();
   }
 
   Future<void> _fetchVehicles() async {
@@ -31,12 +32,40 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         _vehicleOptions = vehicleSnapshot.docs.map((doc) {
           String marca = doc.get('marca') ?? '';
           String modelo = doc.get('modelo') ?? '';
-          return '$marca $modelo'; // Concatenar marca e modelo
+          return '$marca $modelo';
         }).toList();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao carregar veículos: $e')),
+      );
+    }
+  }
+
+  Future<void> _startShift() async {
+    try {
+      // Criar o documento na coleção expedientes
+      DocumentReference docRef = await FirebaseFirestore.instance.collection('expedientes').add({
+        'driverName': widget.driverName,
+        'vehicle': _selectedVehicle,
+        'km': int.parse(_kmController.text),
+        'startTime': Timestamp.now(),
+        'endTime': null,
+      });
+
+      // Redirecionar para a nova tela, passando o ID do documento
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DriverDashboardScreen(
+            driverName: widget.driverName,
+            shiftId: docRef.id, // Passar o ID do expediente
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao iniciar expediente: $e')),
       );
     }
   }
@@ -88,8 +117,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: _kmController,
-              keyboardType: TextInputType.number, // Aceita apenas números
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Só permite dígitos
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 labelText: 'Verifique a km do veículo',
                 border: OutlineInputBorder(
@@ -102,11 +131,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_selectedVehicle != null && _kmController.text.isNotEmpty) {
-                  // Lógica para avançar (a ser implementada)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Expediente iniciado!')),
-                  );
-                  Navigator.pop(context); // Volta para a tela anterior
+                  _startShift();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Selecione um veículo e insira o km!')),
