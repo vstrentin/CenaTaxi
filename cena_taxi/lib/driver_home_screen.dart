@@ -1,3 +1,4 @@
+import 'package:cena_taxi/login.dart';
 import 'package:flutter/material.dart';
 import 'vehicle_selection_screen.dart'; // Nova tela
 
@@ -6,13 +7,25 @@ class DriverHomeScreen extends StatelessWidget {
 
   const DriverHomeScreen({super.key, required this.driverName});
 
+    Future<void> _logout(BuildContext context) async {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('APP TAXI'),
+        title: const Text('APP TÁXI'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+            tooltip: 'Sair',
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset('assets/images/taxi_do_alemao_logo.png', height: 30),

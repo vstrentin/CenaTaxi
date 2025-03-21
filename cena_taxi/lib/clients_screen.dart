@@ -1,29 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'add_client_screen.dart'; // Nova tela
+import 'add_client_screen.dart';
+import 'client_detail_screen.dart'; // Nova tela de detalhes
 
-class ClientsScreen extends StatefulWidget {
+class ClientsScreen extends StatelessWidget {
   final String driverName;
 
   const ClientsScreen({super.key, required this.driverName});
-
-  @override
-  _ClientsScreenState createState() => _ClientsScreenState();
-}
-
-class _ClientsScreenState extends State<ClientsScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.trim();
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,72 +26,55 @@ class _ClientsScreenState extends State<ClientsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddClientScreen(driverName: widget.driverName),
+              builder: (context) => AddClientScreen(driverName: driverName),
             ),
           );
         },
         backgroundColor: const Color(0xFFFFC107),
         child: const Icon(Icons.add, color: Colors.black),
       ),
-      body: Column(
-        children: [
-          Padding(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('clientes')
+            .where('driverName', isEqualTo: driverName)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('Erro ao carregar clientes'));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('Nenhum cliente encontrado'));
+          }
+
+          return ListView.builder(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Pesquisar cliente...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('clientes')
-                  .where('driverName', isEqualTo: widget.driverName)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Erro: ${snapshot.error}'));
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              var client = snapshot.data!.docs[index];
+              String clientName = client['name'];
 
-                final clients = snapshot.data!.docs.where((doc) {
-                  String clientName = doc['name'].toString().toLowerCase();
-                  return clientName.contains(_searchQuery.toLowerCase());
-                }).toList();
-
-                if (clients.isEmpty) {
-                  return const Center(child: Text('Nenhum cliente encontrado.'));
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  itemCount: clients.length,
-                  itemBuilder: (context, index) {
-                    final client = clients[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          client['name'],
-                          style: const TextStyle(fontSize: 16),
-                        ),
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ListTile(
+                  title: Text('Cliente: $clientName'),
+                  onTap: () {
+                    // Navegar para a tela de detalhes do cliente
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ClientDetailScreen(client: client),
                       ),
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

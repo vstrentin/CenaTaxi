@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
       var userDoc = userQuery.docs.first;
       String storedPassword = userDoc.get('senha') ?? '';
       String role = userDoc.get('role') ?? 'driver';
-      String name = userDoc.get('nome') ?? 'Motorista'; // Puxar o nome do Firestore
+      String name = userDoc.get('nome') ?? 'Administrador'; // Puxar o nome do Firestore, com valor padrão
 
       // Verificar se a senha fornecida coincide
       if (_passwordController.text.trim() == storedPassword) {
@@ -43,7 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (role == 'admin') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+            MaterialPageRoute(
+              builder: (context) => AdminHomeScreen(adminName: name), // Passar o nome do administrador
+            ),
           );
         } else {
           Navigator.pushReplacement(
